@@ -13,19 +13,19 @@ const server = new McpServer({
 
 // Tool: Add a new note to the wiki
 server.tool(
-  "add_new",
-  "Add a new note to the wiki",
+  "Add or Update Note",
+  "Add a new note to the wiki or update an existing note",
   {
-    PN: z.string().describe("The name of the note"),
-    CT: z.string().describe("The content of the note"),
+    name: z.string().describe("The name of the note"),
+    content: z.string().describe("The content of the note"),
   },
-  async ({ PN, CT }) => {
+  async ({ name, content }) => {
     try {
       const response = await axios.post(
         "https://edit.alariawiki.online/add_new",
         new URLSearchParams({
-          PN,
-          CT,
+          PN: name,
+          CT: content,
         }),
         {
           headers: {
@@ -34,11 +34,22 @@ server.tool(
         }
       );
 
+      if (response.status === 302) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Successfully updated note: ${name}`,
+            },
+          ],
+        };
+      }
+
       return {
         content: [
           {
             type: "text",
-            text: `Successfully added note: ${PN}`,
+            text: `Successfully added note: ${name}`,
           },
         ],
       };
